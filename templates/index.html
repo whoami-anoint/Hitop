@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Monitor</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        pre {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+            max-width: 800px;
+            margin: auto;
+            white-space: pre-wrap;
+        }
+
+        .info {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        // Function to refresh the page every 5 seconds
+        function refreshPage() {
+            location.reload();
+        }
+
+        // Auto-refresh every 5 seconds
+        setInterval(refreshPage, 5000);
+    </script>
+</head>
+<body>
+    <h1>Device Monitor</h1>
+    <pre>
+        {% for line in top_lines %}
+            {{ line }}<br>
+        {% endfor %}
+    </pre>
+    <div class="info">
+        <p>Current Time: {{ current_time }}</p>
+        <p>Running Services:</p>
+        <pre>{{ running_services }}</pre>
+    </div>
+</body>
+</html>
