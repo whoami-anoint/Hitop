@@ -1,63 +1,20 @@
-name: Automatic merge to main
+name: Merge Dev to Main
 
 on:
-  pull_request:
-    branches: [ dev ]
-    types: [ closed ]  # Trigger only on closed PRs
+  push:
+    branches:
+      - dev
 
 jobs:
-  create-and-merge-pr:
+  merge:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Merge to main
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              const mergedPR = context.payload.pull_request;
-              const baseRef = mergedPR.base.ref;
-              const headRef = mergedPR.head.ref;
-
-              if (baseRef === 'dev' && headRef !== 'main') {  
-                console.log("PR merged to dev from another branch, proceeding...");
-
-                const github = require('@actions/github');
-
-                github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title: 'Automatic merge from dev to main',
-                  body: 'This PR was automatically created to merge changes from dev to main, following a successful merge to dev.',
-                  head: 'dev',
-                  base: 'main',
-                  maintainer_can_modify: true
-                }).then(newPR => {
-                  return github.rest.pulls.merge({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: newPR.data.number,
-                    merge_method: 'merge'
-                  });
-                }).then(() => {
-                  console.log("PR merged to main successfully!");
-                }).catch(error => {
-                  console.error("Error:", error);
-                  // Handle the error gracefully, e.g., log it, notify maintainers
-                });
-              } else {
-                console.log("PR not merged to dev from another branch, skipping auto-merge");
-              }
-            } catch (error) {
-              console.error("Error:", error);
-              // Handle the error gracefully, e.g., log it, notify maintainers
-            }
+      - name: Merge into main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge --no-ff origin/dev -m "Merge from dev to main"
+          git push origin main
