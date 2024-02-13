@@ -1,0 +1,44 @@
+name: Automatic merge to main
+
+on:
+  pull_request:
+    branches: [ dev ]
+    types: [ closed ]  # Trigger only on closed PRs
+
+jobs:
+  create-and-merge-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          script: |
+            const mergedPR = context.payload.pull_request;
+            const baseRef = mergedPR.base.ref;
+            const headRef = mergedPR.head.ref;
+
+            if (baseRef === 'dev' && headRef !== 'main') {  # Ensure PR was merged to dev from another branch
+              await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Automatic merge from dev to main',
+                body: 'This PR was automatically created to merge changes from dev to main, following a successful merge to dev.',
+                head: 'dev',
+                base: 'main',
+                maintainer_can_modify: true
+              });
+
+              const newPR = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.number
+              });
+
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: newPR.data.number,
+                merge_method: 'merge'  # Change to 'squash' or 'rebase' if preferred
+              });
+            }
