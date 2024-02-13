@@ -8,37 +8,49 @@ on:
 jobs:
   create-and-merge-pr:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+        shell: bash
+      env:
+        NODE_VERSION: 20  # Enforce Node.js 20
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const mergedPR = context.payload.pull_request;
-            const baseRef = mergedPR.base.ref;
-            const headRef = mergedPR.head.ref;
+            try {
+              const mergedPR = context.payload.pull_request;
+              const baseRef = mergedPR.base.ref;
+              const headRef = mergedPR.head.ref;
 
-            if (baseRef === 'dev' && headRef !== 'main') {  # Ensure PR was merged to dev from another branch
-              await github.rest.pulls.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: 'Automatic merge from dev to main',
-                body: 'This PR was automatically created to merge changes from dev to main, following a successful merge to dev.',
-                head: 'dev',
-                base: 'main',
-                maintainer_can_modify: true
-              });
+              if (baseRef === 'dev' && headRef !== 'main') {  # Ensure PR was merged to dev from another branch
+                console.log("PR merged to dev from another branch, proceeding...");
 
-              const newPR = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.number
-              });
+                const newPR = await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: 'Automatic merge from dev to main',
+                  body: 'This PR was automatically created to merge changes from dev to main, following a successful merge to dev.',
+                  head: 'dev',
+                  base: 'main',
+                  maintainer_can_modify: true
+                });
 
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: newPR.data.number,
-                merge_method: 'merge'  # Change to 'squash' or 'rebase' if preferred
-              });
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: newPR.data.number,
+                  merge_method: 'merge'  # Change to 'squash' or 'rebase' if preferred
+                });
+
+                console.log("PR merged to main successfully!");
+              } else {
+                console.log("PR not merged to dev from another branch, skipping auto-merge");
+              }
+            } catch (error) {
+              console.error("Error:", error);
+              # Handle the error gracefully, e.g., log it, notify maintainers
             }
