@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE_NAME = 'abhi/hitop'
+    }
+
     stages {
         stage('Initialize') {
             steps {
@@ -35,6 +39,15 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 echo 'Running integration tests...'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image with Nginx
+                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                }
             }
         }
 
