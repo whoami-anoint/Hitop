@@ -1,96 +1,25 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE_NAME = 'abhi/hitop'
-    }
-
     stages {
-        stage('Initialize') {
+        stage('Clone Repository') {
             steps {
-                echo 'Initializing...'
-            }
-        }
-
-        stage('Checkout Code') {
-            steps {
-                echo 'Checking out code...'
+                // Checkout your repository
                 git 'https://github.com/whoami-anoint/Hitop.git'
             }
         }
-
-        stage('Unit Tests') {
+        
+        stage('Run Flask App') {
             steps {
-                echo 'Running unit tests...'
-                sh 'pytest'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Building the project...'
-                sh 'python build.py'
-            }
-        }
-
-        stage('Static Code Analysis') {
-            steps {
-                echo 'Running static code analysis...'
-                sh 'flake8 .'
-            }
-        }
-
-        stage('Integration Tests') {
-            steps {
-                echo 'Running integration tests...'
-                sh 'python integration_tests.py'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                echo 'Building Docker image...'
-                script {
-                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                // Change to the directory of your Flask app
+                dir('Hitop') {
+                    // Install dependencies
+                    sh 'pip install -r requirements.txt'
+                    
+                    // Run Flask app
+                    sh 'python app.py &'
                 }
             }
-        }
-
-        stage('Deploy to Staging') {
-            steps {
-                echo 'Deploying to staging environment...'
-                sh 'kubectl apply -f staging.yaml'
-            }
-        }
-
-        stage('Smoke Tests') {
-            steps {
-                echo 'Running smoke tests...'
-                sh 'python smoke_tests.py'
-            }
-        }
-
-        stage('Deploy to Production') {
-            steps {
-                echo 'Deploying to production environment...'
-                sh 'kubectl apply -f production.yaml'
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                echo 'Cleaning up...'
-                sh 'docker system prune -af'
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline executed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
         }
     }
 }
