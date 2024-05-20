@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 import subprocess
+import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -34,7 +35,6 @@ def index():
     # Split the top output into lines
     top_lines = top_output.split('\n')
 
-    # Split the running and inactive services into lists
     running_services_list = [line.split() for line in running_services.split('\n') if line]
     inactive_services_list = [line.split() for line in inactive_services.split('\n') if line]
 
@@ -47,11 +47,10 @@ def running_services():
     # Get running services
     running_services = get_running_services()
 
-    # Split the running services into a list
     running_services_list = [line.split() for line in running_services.split('\n') if line]
 
-    # Pass the information to the template
     return render_template('running_services.html', running_services=running_services_list)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
