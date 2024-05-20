@@ -1,5 +1,0 @@
-This is first main changes.
-Small changes
-{{2*2}}[[3*3]]
-{{3*3}}
-{{3*4}}
